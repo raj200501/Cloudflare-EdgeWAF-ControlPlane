@@ -1,48 +1,69 @@
-# IronShield — Local Edge Proxy + WAF + Live Attack Map
+# IronShield Edge Security Control Plane
 
-IronShield is a Cloudflare-inspired local edge platform: reverse proxy, WAF rules, rate limiting, geo policy, and a real-time attack map with a guaranteed demo.
+Cloudflare-style local control plane simulator with a FastAPI edge pipeline, signed policy snapshots, deterministic attacker traffic, and a React dashboard.
 
-## 60-Second Quickstart
+## Verified quickstart
+
 ```bash
 make bootstrap
 make demo
 ```
-Open the dashboard at `http://localhost:5173`. You should see live attack arcs and request counters within 15 seconds.
-The map uses a lightweight animated canvas renderer to avoid external dependencies.
 
-## Architecture
-```mermaid
-flowchart LR
-  Attacker --> Edge
-  Edge --> Origin
-  Edge -->|Events| Dashboard
-  Edge -->|Rules| RulesEngine
-  Edge -->|Rate Limit| Limiter
-```
+URLs:
+- Dashboard: http://localhost:5173
+- Edge API: http://localhost:8000
+- Origin simulator: http://localhost:8081
 
-## WAF Pipeline
-1. **WAF** evaluates SQLi/XSS/UA rules.
-2. **Rate limit** enforces token bucket per IP.
-3. **Geo policy** checks the denylist.
-4. **Proxy** forwards allowed traffic to origin.
-5. **Events** streamed via WebSocket/SSE.
+## Verified checks
 
-## Demo Commands
-```bash
-make dev
-python -m apps.attacker.run --target http://localhost:8080 --profile mixed
-```
-You should see live events on the map and a growing request table.
-
-## Repo Structure
-- `apps/edge`: FastAPI edge proxy + WAF pipeline
-- `apps/origin`: deterministic upstream service
-- `apps/dashboard`: React + Vite dashboard
-- `apps/attacker`: traffic simulator
-- `packages/rules_engine`: JSON rules engine
-- `packages/limiter`: token bucket limiter
-
-## Verification
 ```bash
 make verify
+cd apps/dashboard && npm test
+pytest -q
+make loc
 ```
+
+## Monorepo layout
+
+- `apps/edge`: edge + control plane APIs + websockets
+- `apps/origin`: deterministic origin simulator
+- `apps/attacker`: deterministic local attacker CLI
+- `apps/dashboard`: React + Vite + TypeScript dashboard (legacy dashboard preserved under `apps/dashboard/legacy`)
+- `packages/rules_engine`: WAF rule matching engine
+- `packages/limiter`: token-bucket rate limiting primitives
+- `docs/`: architecture and demo notes
+
+## API summary
+
+### Policies
+- `GET/POST /api/policies/waf`
+- `GET/POST /api/policies/rate`
+- `GET/POST /api/policies/geo`
+- `GET/POST /api/policies/bot`
+- `PUT/DELETE /api/policies/*/{id}`
+
+### Deployments
+- `POST /api/deployments/compile`
+- `POST /api/deployments/activate/{snapshot_id}`
+- `GET /api/deployments/active`
+
+### Events
+- `GET /api/events?limit=500`
+- `WS /ws/events`
+
+## Dashboard pages
+
+1. Overview
+2. Live Attack Map
+3. Events Explorer
+4. WAF Rulesets
+5. Rate Limiting
+6. Geo Policy
+7. Bot Management
+8. Deployments
+9. Analytics
+10. Runbooks
+
+## Demo behavior
+
+`make demo` starts origin, edge, dashboard, then launches attacker traffic with a deterministic seed so charts/tables update immediately and reproducibly.

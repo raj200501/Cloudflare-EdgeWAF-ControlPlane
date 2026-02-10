@@ -1,1 +1,1 @@
-console.log('Typecheck skipped: no TypeScript sources.');
+console.log('Typecheck skipped (static JS dashboard by design).');

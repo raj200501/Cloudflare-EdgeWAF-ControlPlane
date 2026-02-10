@@ -1,11 +1,12 @@
 {
   "name": "ironshield-dashboard",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "scripts": {
     "dev": "node scripts/dev.js",
     "build": "node scripts/build.js",
     "lint": "node scripts/lint.js",
-    "typecheck": "node scripts/typecheck.js"
+    "typecheck": "node scripts/typecheck.js",
+    "test": "node scripts/test.js"
   }
 }

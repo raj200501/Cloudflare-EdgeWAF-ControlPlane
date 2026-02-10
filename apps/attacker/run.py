@@ -2,53 +2,66 @@ from __future__ import annotations
 
 import argparse
 import random
+import threading
 import time
 
 import httpx
 
-GOOD_PATHS = ["/home", "/assets", "/api/products"]
-SQLI_PAYLOADS = ["' OR 1=1 --", "union select * from users"]
-XSS_PAYLOADS = ["<script>alert(1)</script>", "?q=javascript:alert(1)"]
 
-GOOD_IPS = ["8.8.8.8", "1.1.1.1", "13.0.0.1"]
-BAD_IPS = ["9.9.9.9", "10.0.0.5", "2.2.2.2", "3.3.3.3"]
-
-
-def send_request(client: httpx.Client, url: str, ip: str, method: str = "GET", data=None):
-    headers = {"x-forwarded-for": ip}
-    return client.request(method, url, headers=headers, json=data, timeout=5.0)
-
-
-def run_profile(target: str, profile: str):
-    random.seed(42)
-    with httpx.Client() as client:
-        if profile in {"normal", "mixed"}:
-            for _ in range(10):
-                path = random.choice(GOOD_PATHS)
-                send_request(client, f"{target}{path}", random.choice(GOOD_IPS))
-                time.sleep(0.1)
-        if profile in {"attack", "mixed"}:
-            for payload in SQLI_PAYLOADS:
-                send_request(
-                    client,
-                    f"{target}/login?user=admin&pass={payload}",
-                    random.choice(BAD_IPS),
-                    method="POST",
-                    data={"username": "admin", "password": payload},
-                )
-            for payload in XSS_PAYLOADS:
-                send_request(client, f"{target}/search?q={payload}", random.choice(BAD_IPS))
-            for _ in range(20):
-                send_request(client, f"{target}/api/products", random.choice(BAD_IPS))
+def build_profiles() -> list[dict[str, str]]:
+    return [
+        {"method": "GET", "path": "/home"},
+        {"method": "GET", "path": "/assets/logo.svg"},
+        {"method": "POST", "path": "/login", "data": "username=alice&password=hunter2"},
+        {"method": "GET", "path": "/search?q=' OR 1=1 --"},
+        {"method": "GET", "path": "/comment?text=<script>alert(1)</script>"},
+        {"method": "GET", "path": "/api/data"},
+    ]
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--target", required=True)
-    parser.add_argument("--profile", default="mixed", choices=["normal", "attack", "mixed"])
-    args = parser.parse_args()
-    run_profile(args.target, args.profile)
+def fire(target: str, duration: int, seed: int, workers: int = 4):
+    stop_at = time.time() + duration
+    octets = [1, 2, 8, 21, 44, 88, 101, 121]
+    ip_pool = [f"{octet}.10.0.{host}" for octet in octets for host in range(1, 30)]
+
+    def worker(offset: int):
+        rnd = random.Random(seed + offset)
+        with httpx.Client(timeout=2.0) as client:
+            while time.time() < stop_at:
+                req = rnd.choice(build_profiles())
+                ip = rnd.choice(ip_pool)
+                headers = {
+                    "x-forwarded-for": ip,
+                    "user-agent": rnd.choice(
+                        [
+                            "Mozilla/5.0",
+                            "python-requests/2.31",
+                            "curl/8.0",
+                            "sqlmap/1.8",
+                            "EvilBot/4.2",
+                        ]
+                    ),
+                }
+                method = req["method"]
+                url = f"{target}{req['path']}"
+                try:
+                    client.request(method, url, data=req.get("data", ""), headers=headers)
+                except Exception:
+                    pass
+                time.sleep(rnd.uniform(0.005, 0.08))
+
+    threads = [threading.Thread(target=worker, args=(i,), daemon=True) for i in range(workers)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Deterministic local attacker simulator")
+    parser.add_argument("--target", default="http://localhost:8000")
+    parser.add_argument("--duration", type=int, default=60)
+    parser.add_argument("--seed", type=int, default=123)
+    parser.add_argument("--workers", type=int, default=4)
+    args = parser.parse_args()
+    fire(args.target, args.duration, args.seed, args.workers)
