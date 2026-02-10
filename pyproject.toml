@@ -1,0 +1,13 @@
+[project]
+name = "ironshield"
+version = "0.1.0"
+description = "IronShield local edge proxy"
+requires-python = ">=3.11"
+
+[tool.ruff]
+line-length = 100
+select = ["E", "F", "W", "I"]
+
+[tool.pytest.ini_options]
+testpaths = ["packages", "apps"]
+

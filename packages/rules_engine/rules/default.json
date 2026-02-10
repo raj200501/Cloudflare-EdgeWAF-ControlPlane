@@ -1,0 +1,53 @@
+{
+  "name": "default",
+  "rules": [
+    {
+      "id": "waf-001",
+      "description": "Block SQL injection patterns",
+      "tags": ["sqli"],
+      "priority": 10,
+      "condition": {
+        "field": "query",
+        "pattern": "(union select|\\bor\\s+1=1|--|;)",
+        "operator": "regex"
+      },
+      "action": {
+        "action": "block",
+        "reason": "sqli",
+        "threat_type": "sql-injection"
+      }
+    },
+    {
+      "id": "waf-002",
+      "description": "Block XSS patterns",
+      "tags": ["xss"],
+      "priority": 20,
+      "condition": {
+        "field": "query",
+        "pattern": "(<script|onerror=|javascript:)",
+        "operator": "regex"
+      },
+      "action": {
+        "action": "block",
+        "reason": "xss",
+        "threat_type": "xss"
+      }
+    },
+    {
+      "id": "waf-003",
+      "description": "Block evil bot user agent",
+      "tags": ["ua"],
+      "priority": 30,
+      "condition": {
+        "field": "user_agent",
+        "pattern": "evil-bot",
+        "operator": "contains"
+      },
+      "action": {
+        "action": "block",
+        "reason": "ua",
+        "threat_type": "bot"
+      }
+    }
+  ]
+}
