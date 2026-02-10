@@ -1,24 +1,25 @@
-from fastapi import FastAPI
+from __future__ import annotations
 
-app = FastAPI(title="IronShield Origin")
+import random
+import time
 
+from fastapi import FastAPI, Request
 
-@app.get("/")
-@app.get("/home")
-def home():
-    return {"message": "Welcome to the origin service"}
-
-
-@app.get("/assets")
-def assets():
-    return {"assets": ["logo.png", "hero.jpg"]}
+app = FastAPI(title="Origin Simulator")
 
 
-@app.get("/api/products")
-def products():
-    return {"products": [{"id": 1, "name": "Edge Shield"}, {"id": 2, "name": "WAF Pro"}]}
-
-
-@app.post("/login")
-def login(payload: dict):
-    return {"status": "ok", "received": payload}
+@app.api_route("/{path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE"])
+async def origin(path: str, request: Request):
+    start = time.perf_counter()
+    body = await request.body()
+    random.seed(path)
+    jitter = random.random() * 0.02
+    time.sleep(jitter)
+    latency_ms = (time.perf_counter() - start) * 1000
+    return {
+        "ok": True,
+        "path": f"/{path}",
+        "method": request.method,
+        "payload_size": len(body),
+        "latency_ms": round(latency_ms, 2),
+    }

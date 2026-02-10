@@ -1,4 +1,4 @@
-.PHONY: bootstrap dev demo verify
+.PHONY: bootstrap dev demo verify loc
 
 bootstrap:
 	python -m venv .venv
@@ -13,3 +13,6 @@ demo:
 
 verify:
 	./scripts/verify.sh
+
+loc:
+	python scripts/loc.py

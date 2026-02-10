@@ -2,21 +2,24 @@
 set -euo pipefail
 
 cleanup() {
-  if [[ -n "${EDGE_PID:-}" ]]; then kill "$EDGE_PID"; fi
-  if [[ -n "${ORIGIN_PID:-}" ]]; then kill "$ORIGIN_PID"; fi
-  if [[ -n "${DASH_PID:-}" ]]; then kill "$DASH_PID"; fi
+  [[ -n "${EDGE_PID:-}" ]] && kill "$EDGE_PID" || true
+  [[ -n "${ORIGIN_PID:-}" ]] && kill "$ORIGIN_PID" || true
+  [[ -n "${DASH_PID:-}" ]] && kill "$DASH_PID" || true
 }
 trap cleanup EXIT
 
 PYTHONPATH=. python -m uvicorn apps.origin.main:app --host 0.0.0.0 --port 8081 &
 ORIGIN_PID=$!
-PYTHONPATH=. python -m uvicorn apps.edge.main:app --host 0.0.0.0 --port 8080 &
+PYTHONPATH=. python -m uvicorn apps.edge.main:app --host 0.0.0.0 --port 8000 &
 EDGE_PID=$!
 
 pushd apps/dashboard >/dev/null
-npm install
 npm run dev -- --host 0.0.0.0 --port 5173 &
 DASH_PID=$!
 popd >/dev/null
+
+echo "Edge API: http://localhost:8000"
+echo "Origin:   http://localhost:8081"
+echo "Dashboard:http://localhost:5173"
 
 wait

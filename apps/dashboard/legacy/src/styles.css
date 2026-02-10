@@ -1,0 +1,124 @@
+:root {
+  color-scheme: dark;
+  --bg: #020617;
+  --panel: #0f172a;
+  --accent-red: #ff3860;
+  --accent-green: #32ff6a;
+  --text: #e2e8f0;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+header {
+  padding: 20px 28px;
+  border-bottom: 1px solid #1e293b;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+nav {
+  display: flex;
+  gap: 12px;
+  padding: 12px 28px;
+  border-bottom: 1px solid #1e293b;
+}
+
+nav button {
+  background: #0f172a;
+  color: var(--text);
+  border: none;
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+nav button.active {
+  background: var(--accent-red);
+  color: #020617;
+}
+
+main {
+  padding: 28px;
+}
+
+.panel {
+  background: var(--panel);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  border: 1px solid #1e293b;
+}
+
+.grid {
+  display: grid;
+  gap: 16px;
+}
+
+.grid.two {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.table th,
+.table td {
+  padding: 8px;
+  border-bottom: 1px solid #1e293b;
+  text-align: left;
+}
+
+.badge.green {
+  color: var(--accent-green);
+}
+
+.badge.red {
+  color: var(--accent-red);
+}
+
+input,
+button {
+  font-family: inherit;
+}
+
+input {
+  background: #020617;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  padding: 8px;
+  color: var(--text);
+}
+
+button.primary {
+  background: var(--accent-red);
+  color: #020617;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+button.secondary {
+  background: var(--accent-green);
+  color: #020617;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+canvas {
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  border: 1px solid #1e293b;
+}

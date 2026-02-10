@@ -1,18 +1,28 @@
-# IronShield Architecture
+# Architecture
 
-## Components
-- **Edge (apps/edge)**: FastAPI reverse proxy with WAF, rate limiting, geo policy, and event streaming.
-- **Origin (apps/origin)**: Deterministic upstream service.
-- **Dashboard (apps/dashboard)**: React UI with live attack map and control panels.
-- **Attacker (apps/attacker)**: Deterministic traffic generator.
-- **Rules Engine (packages/rules_engine)**: JSON ruleset parsing and matching.
-- **Limiter (packages/limiter)**: Token bucket rate limiter.
+IronShield has two planes:
 
-## Event Flow
-1. Request arrives at the Edge.
-2. WAF rules evaluate the request for threats.
-3. Rate limiter checks per-IP capacity.
-4. Geo policy checks the resolved country.
-5. Decision and latency headers are appended.
-6. Event is stored in memory and streamed via WebSocket/SSE.
-7. Dashboard subscribes to events for the live map and tables.
+- **Control plane**: CRUD policies + compile immutable deployment snapshots with deterministic hashing.
+- **Data plane (edge)**: request evaluation pipeline (`geo -> waf -> rate limit -> bot`) and reverse proxy to origin.
+
+## Data flow
+
+1. Dashboard or API client creates policies.
+2. `/api/deployments/compile` builds canonical bundle and SHA-256 hash.
+3. `/api/deployments/activate/{id}` marks active snapshot.
+4. Edge handles requests, emits event per request to state backend and websocket subscribers.
+
+## State
+
+`apps/edge/store.py` exposes `StateBackend` with:
+
+- `InMemoryStateBackend` (always available)
+- `RedisStateBackend` (used automatically when `REDIS_URL` is configured and reachable)
+
+## Observability
+
+Response headers include:
+- `Server-Timing`
+- `X-IronShield-Decision`
+- `X-IronShield-Reason`
+- `X-IronShield-Country`

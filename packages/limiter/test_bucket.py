@@ -21,7 +21,10 @@ def test_token_bucket_purges():
     def time_fn():
         return now
 
-    bucket = InMemoryTokenBucket(TokenBucketConfig(rate_per_sec=1, burst=1, ttl_seconds=1), time_fn=time_fn)
+    bucket = InMemoryTokenBucket(
+        TokenBucketConfig(rate_per_sec=1, burst=1, ttl_seconds=1),
+        time_fn=time_fn,
+    )
     assert bucket.allow("ip") is True
     now += 2
     bucket.purge_expired()
